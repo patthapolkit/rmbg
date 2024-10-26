@@ -30,7 +30,7 @@ jobs:
         context: ./backend
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: $${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
     - 
       name: Build and push the frontend image
       uses: docker/build-push-action@v6
@@ -38,7 +38,7 @@ jobs:
         context: ./frontend
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: $${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
     - 
       name: Log out from GitHub Container Registry
       run: docker logout ghcr.io
