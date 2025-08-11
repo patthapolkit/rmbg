@@ -35,7 +35,8 @@ async def remove_background(file: UploadFile):
         )
 
     try:
-        input_image = Image.open(file.file)
+        input_bytes = await file.read()
+        Image.open(BytesIO(input_bytes))
     except UnidentifiedImageError:
         raise HTTPException(status_code=400, detail="Invalid image file.")
     except Exception as e:
@@ -43,13 +44,12 @@ async def remove_background(file: UploadFile):
         raise HTTPException(status_code=500, detail="Internal server error.")
 
     try:
-        output_image = remove(input_image, post_process_mask=True)
+        output_bytes = remove(input_bytes, post_process_mask=True)
     except Exception as e:
         logger.error(f"Error processing image: {e}")
         raise HTTPException(status_code=500, detail="Internal server error.")
 
-    img_io = BytesIO()
-    output_image.save(img_io, "PNG")
+    img_io = BytesIO(output_bytes)
     img_io.seek(0)
 
     return StreamingResponse(
