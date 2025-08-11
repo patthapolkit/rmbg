@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,9 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
 export default function BackgroundRemover() {
   const [originalImage, setOriginalImage] = useState<File | null>(null);
-  const [processedImage, setProcessedImage] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [processedImage, setProcessedImage] = useState<Blob | null>(null);
+  const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +24,30 @@ export default function BackgroundRemover() {
       setError(null);
     }
   };
+
+  useEffect(() => {
+    if (originalImage) {
+      const url = URL.createObjectURL(originalImage);
+      setPreviewUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [originalImage]);
+
+  useEffect(() => {
+    if (processedImage) {
+      const url = URL.createObjectURL(processedImage);
+      setProcessedImageUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setProcessedImageUrl(null);
+    }
+  }, [processedImage]);
 
   const removeBackground = async () => {
     if (!originalImage) {
@@ -46,9 +72,7 @@ export default function BackgroundRemover() {
       }
 
       const blob = await res.blob();
-      const imageUrl = URL.createObjectURL(blob);
-
-      setProcessedImage(imageUrl);
+      setProcessedImage(blob);
     } catch (error) {
       if (error instanceof Error) setError(error.message);
     } finally {
@@ -57,9 +81,9 @@ export default function BackgroundRemover() {
   };
 
   const downloadImage = () => {
-    if (processedImage) {
+    if (processedImageUrl) {
       const link = document.createElement("a");
-      link.href = processedImage;
+      link.href = processedImageUrl;
       link.download = "removed_background.png";
       document.body.appendChild(link);
       link.click();
@@ -102,11 +126,11 @@ export default function BackgroundRemover() {
             </div>
           </div>
 
-          {originalImage && (
+          {previewUrl && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-2">Original Image</h2>
               <Image
-                src={originalImage ? URL.createObjectURL(originalImage) : ""}
+                src={previewUrl}
                 alt="Original"
                 className="max-w-full h-auto rounded-lg shadow-md"
                 width={800}
@@ -135,14 +159,14 @@ export default function BackgroundRemover() {
 
           {error && <div className="text-red-500 mb-6">{error}</div>}
 
-          {processedImage && (
+          {processedImageUrl && (
             <div>
               <div className="flex justify-between mb-3">
                 <h2 className="text-lg font-semibold">Processed Image</h2>
                 <Button onClick={downloadImage}>Download</Button>
               </div>
               <Image
-                src={processedImage}
+                src={processedImageUrl}
                 alt="Processed"
                 className="max-w-full h-auto rounded-lg shadow-md"
                 width={800}
